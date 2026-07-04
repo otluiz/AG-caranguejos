@@ -27,21 +27,24 @@ O resultado é um híbrido AG + DE que busca aumentar a diversidade populacional
 
 ## 📊 Resultados
 
-<!--
-  Adicione aqui os gráficos mais representativos de src/logs/, por exemplo:
-  ![Convergência - Rastrigin](docs/figures/rastrigin_convergencia.png)
-  ![Boxplot - Sphere](docs/figures/sphere_boxplot.png)
--->
+Em funções **multimodais**, o FCDGA supera consistentemente AG clássico e DE/rand/1/bin em qualidade de solução — pagando isso com um custo computacional maior por época. É exatamente o trade-off exploração-vs-custo previsto na fundamentação teórica do paper.
 
-| Função      | FCDGA | AG clássico | DE/rand/1/bin |
-|-------------|:-----:|:-----------:|:-------------:|
-| Sphere      |   —   |      —      |       —       |
-| Rastrigin   |   —   |      —      |       —       |
-| Ackley      |   —   |      —      |       —       |
-| Rosenbrock  |   —   |      —      |       —       |
-| Griewank    |   —   |      —      |       —       |
+<p align="center">
+  <img src="docs/figures/rastrigin_boxplot.png" width="420" alt="Boxplot - Rastrigin">
+  <img src="docs/figures/ackley_boxplot.png" width="420" alt="Boxplot - Ackley">
+</p>
 
-> Preencha a tabela com o melhor valor médio encontrado por algoritmo. Curvas de convergência completas em `src/logs/`.
+| Função     | FCDGA (melhor valor) | AG clássico | DE/rand/1/bin | Tempo/época FCDGA | Tempo/época DE | Overhead FCDGA |
+|------------+----------------------+-------------+---------------+-------------------+----------------+----------------|
+| Rastrigin  | **≈ 340**            | ≈ 428       | ≈ 434         | ≈ 0,0105 s        | ≈ 0,0042 s     | ~2,5×          |
+| Ackley     | **≈ 7,89**           | ≈ 8,48      | ≈ 9,30        | ≈ 0,0120 s        | ≈ 0,0050 s     | ~2,4×          |
+| Sphere     | —                    | —           | —             | —                 | —              | —              |
+| Rosenbrock | —                    | —           | —             | —                 | —              | —              |
+| Griewank   | —                    | —           | —             | —                 | —              | —              |
+
+> Menor é melhor para todas as colunas de valor. Preencha as linhas de Sphere, Rosenbrock e Griewank com seus próprios logs — nessas funções unimodais/menos multimodais, é esperado que DE clássico seja competitivo ou superior, o que é um resultado igualmente honesto e relevante para reportar.
+
+Curvas de convergência e gráficos completos de tempo por época em `src/logs/`.
 
 ---
 
