@@ -1,0 +1,217 @@
+\documentclass[
+    article,
+    12pt,
+    oneside,
+    a4paper,
+    english,brazil
+]{abntex2}
+
+% Pacotes básicos
+\usepackage{lipsum}
+\usepackage{microtype} 
+\usepackage{amsmath, amsfonts}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{abntex2cite} % citação ABNT
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes, positioning}
+
+
+% Config ABNT
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0.2cm}
+\OnehalfSpacing
+
+% Título e autores
+\title{Um Operador Evolutivo Inspirado no Comportamento de Caranguejos Violinistas:\\
+Um Híbrido entre Algoritmos Genéticos e Evolução Diferencial}
+
+\author{Autor 1\thanks{Instituição, e-mail} \\
+        Autor 2\thanks{Instituição, e-mail}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{resumo}
+Este trabalho propõe um operador de seleção e reprodução inspirado nos mecanismos de comunicação e escolha sexual observados em caranguejos violinistas (\textit{Uca spp.}). Integrando princípios de Algoritmos Genéticos (AG) e Evolução Diferencial (DE), o algoritmo introduz um traço sintético equivalente ao “display” apresentado por machos na natureza, modulando a dinâmica evolutiva por meio de competição territorial e seleção sexual probabilística. A fêmea selecionada atua como vetor base no operador diferencial, combinando diferenças entre machos vencedores de cada território. Experimentos em funções padrão de otimização contínua avaliam qualidade das soluções, velocidade de convergência e diversidade populacional. Os resultados preliminares sugerem que o operador inspirado em caranguejos violinistas aumenta a capacidade exploratória sem comprometer a intensificação, apresentando desempenho competitivo frente a técnicas evolutivas clássicas.
+\\[0.2cm]
+\textbf{Palavras-chave:} Algoritmos Evolutivos; Seleção Sexual; Evolução Diferencial; Bioinspiração; Otimização.
+\end{resumo}
+
+\section{Introdução}
+
+Algoritmos evolutivos têm sido amplamente utilizados para problemas de otimização contínua e combinatória, destacando-se pela flexibilidade e capacidade de escapar de ótimos locais. Entre suas variantes mais estudadas estão os Algoritmos Genéticos (AG), propostos por Holland, e os métodos de Evolução Diferencial (DE), que utilizam diferenças vetoriais entre indivíduos como força direcional adaptativa.
+
+Este artigo propõe um operador híbrido baseado no comportamento de caranguejos violinistas (\textit{Uca spp.}), cujos machos realizam displays com uma garra hipertrofiada, sendo avaliados por fêmeas por meio de sinais visuais e comportamentais. A proposta integra competição territorial, custo do sinal e seleção sexual multiatributo com o operador de recombinação diferencial da DE.
+
+\section{Fundamentação Teórica}
+
+\subsection{Algoritmos Genéticos}
+
+AGs utilizam operadores de seleção, crossover e mutação. A seleção conduz a intensificação, privilegiando indivíduos com melhor aptidão, enquanto o crossover funciona como mecanismo de recombinação genética.
+
+\subsection{Evolução Diferencial}
+
+DE gera novos vetores solução aplicando diferença entre indivíduos:
+
+\[
+x_{\text{trial}} = x_r + F (x_a - x_b),
+\]
+
+onde $F$ é o fator diferencial. A abordagem é eficaz em otimização contínua por equilibrar exploração e intensificação.
+
+\subsection{Biologia dos Caranguejos Violinistas}
+
+Caranguejos violinistas apresentam seleção sexual marcada por:
+
+\begin{itemize}
+    \item displays rítmicos usando a garra maior;
+    \item competição territorial entre machos;
+    \item escolha seletiva das fêmeas com base no sinal e na aptidão física;
+    \item custo energético associado à manutenção da garra e do display.
+\end{itemize}
+
+Tais elementos inspiram operadores evolutivos multiatributo.
+
+\section{Metodologia Proposta}
+
+\subsection{Representação}
+
+Cada indivíduo $x$ possui:
+
+\begin{enumerate}
+    \item aptidão primária $f(x)$;
+    \item traço sexual sintético $s(x)$.
+\end{enumerate}
+
+Define-se:
+
+\[
+f_{\text{efetivo}}(x) = f(x) - \lambda C(s(x)).
+\]
+
+\subsection{Estrutura Territorial}
+
+A população é dividida em subgrupos denominados territórios, nos quais ocorre competição local entre machos.
+
+\subsection{Seleção Sexual}
+
+A probabilidade de um macho $i$ superar outro $j$ é:
+
+\[
+P(i \succ j) = \sigma\left( \alpha (f_i - f_j) + \beta (s_i - s_j) \right),
+\]
+
+onde $\sigma$ é a função sigmoide.
+
+\subsection{Reprodução Diferencial}
+
+A fêmea $x_f$ atua como vetor base:
+
+\[
+x_{\text{filho}} = x_f + F \cdot (x_i - x_j) + \varepsilon.
+\]
+
+\subsection{Ciclo Evolutivo}
+
+\begin{enumerate}
+    \item avaliação dos indivíduos;
+    \item formação dos territórios;
+    \item seleção sexual;
+    \item reprodução diferencial;
+    \item mutação;
+    \item elitismo e substituição.
+\end{enumerate}
+
+\section{Experimentos}
+
+\subsection{Funções Benchmark}
+
+Serão utilizadas as funções:
+
+\begin{itemize}
+    \item Sphere,
+    \item Rastrigin,
+    \item Ackley,
+    \item Rosenbrock,
+    \item Griewank.
+\end{itemize}
+
+\subsection{Algoritmos de Comparação}
+
+\begin{enumerate}
+    \item DE/rand/1/bin (baseline),
+    \item AG clássico,
+    \item Algoritmo proposto (FCDGA).
+\end{enumerate}
+
+\subsection{Métricas}
+
+Serão avaliados:
+
+\begin{itemize}
+    \item melhor valor encontrado;
+    \item curva de convergência;
+    \item diversidade populacional;
+    \item variância entre execuções.
+\end{itemize}
+
+\section{Resultados Esperados}
+
+Espera-se aumento na diversidade populacional e maior capacidade de evitar convergência prematura. Em funções multimodais, prevê-se superioridade do algoritmo proposto sobre AG e DE clássicos.
+
+
+
+\section{Conclusões}
+
+O operador inspirado nos caranguejos violinistas integra seleção sexual multiatributo, competição territorial e reprodução diferencial, oferecendo uma alternativa biologicamente motivada a operadores clássicos. A abordagem apresenta potencial para otimização multimodal e adaptação dinâmica de parâmetros.
+
+
+\bibliographystyle{abntex2-alf}
+\begin{thebibliography}{99}
+
+\bibitem{Holland1975}
+HOLLAND, J. H. 
+\textit{Adaptation in natural and artificial systems}. 
+Ann Arbor: University of Michigan Press, 1975.
+
+\bibitem{StornPrice1997}
+STORN, R.; PRICE, K. 
+Differential evolution – A simple and efficient heuristic for global optimization over continuous spaces. 
+\textit{Journal of Global Optimization}, v. 11, n. 4, p. 341–359, 1997.
+
+\bibitem{Foster1996}
+FOSTER, S. A. 
+The evolution of behavior in fiddler crabs. 
+\textit{Biological Reviews}, v. 71, n. 3, p. 459–487, 1996.
+
+\bibitem{Back1996}
+BÄCK, T.; FOGEL, D.; MICHALEWICZ, Z.  
+\textit{Handbook of Evolutionary Computation}.  
+Oxford: Oxford University Press, 1996.
+
+\bibitem{Andersson1994}
+ANDERSSON, M.  
+\textit{Sexual Selection}.  
+Princeton: Princeton University Press, 1994.
+
+\bibitem{Basolo2000}
+BASOLO, A. L.  
+Sexual selection and signal evolution in fiddler crabs.  
+\textit{Journal of Experimental Biology}, v. 203, p. 2561–2566, 2000.
+
+\bibitem{Nobile2018}
+NOBILE, M. S. et al.  
+Flowchart-based evolutionary algorithm design.  
+\textit{Applied Soft Computing}, v. 62, p. 101–121, 2018.
+
+\end{thebibliography}
+
+
+\end{document}

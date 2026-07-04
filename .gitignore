@@ -1,0 +1,61 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+
+# Distribuição / empacotamento
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs e saídas de execução (qualquer profundidade)
+**/logs/
+results/*.csv
+results/*.json
+outputs/
+
+# ===== LaTeX =====
+Latex/*.pdf
+Latex/*.aux
+Latex/*.log
+Latex/*.out
+Latex/*.toc
+Latex/*.lof
+Latex/*.lot
+Latex/*.bbl
+Latex/*.blg
+Latex/*.synctex.gz
+Latex/*.fdb_latexmk
+Latex/*.fls
+Latex/*.nav
+Latex/*.snm
+Latex/*.vrb
+Latex/*.bcf
+Latex/*.run.xml
+Latex/*.xdv
+
+# ===== Sistema Operacional =====
+.DS_Store
+Thumbs.db
+
+# ===== Editor =====
+.vscode/
+.idea/
+*.swp
+*~
