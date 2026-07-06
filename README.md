@@ -35,12 +35,12 @@ Em funções **multimodais**, o FCDGA supera consistentemente AG clássico e DE/
 </p>
 
 | Função     | FCDGA (melhor valor) | AG clássico | DE/rand/1/bin | Tempo/época FCDGA | Tempo/época DE | Overhead FCDGA |
-|------------+----------------------+-------------+---------------+-------------------+----------------+----------------|
-| Rastrigin  | **≈ 340**            | ≈ 428       | ≈ 434         | ≈ 0,0105 s        | ≈ 0,0042 s     | ~2,5×          |
-| Ackley     | **≈ 7,89**           | ≈ 8,48      | ≈ 9,30        | ≈ 0,0120 s        | ≈ 0,0050 s     | ~2,4×          |
-| Sphere     | —                    | —           | —             | —                 | —              | —              |
-| Rosenbrock | —                    | —           | —             | —                 | —              | —              |
-| Griewank   | —                    | —           | —             | —                 | —              | —              |
+|------------|:---------------------:|:-----------:|:--------------:|:-------------------:|:-----------------:|:-----------------:|
+| Rastrigin  | **≈ 340**              | ≈ 428        | ≈ 434            | ≈ 0,0105 s           | ≈ 0,0042 s          | ~2,5×               |
+| Ackley     | **≈ 7,89**             | ≈ 8,48        | ≈ 9,30            | ≈ 0,0120 s           | ≈ 0,0050 s          | ~2,4×               |
+| Sphere     | —                       | —            | —                 | —                     | —                    | —                   |
+| Rosenbrock | —                       | —            | —                 | —                     | —                    | —                   |
+| Griewank   | —                       | —            | —                 | —                     | —                    | —                   |
 
 > Menor é melhor para todas as colunas de valor. Preencha as linhas de Sphere, Rosenbrock e Griewank com seus próprios logs — nessas funções unimodais/menos multimodais, é esperado que DE clássico seja competitivo ou superior, o que é um resultado igualmente honesto e relevante para reportar.
 
@@ -61,19 +61,24 @@ pip install -r requirements.txt
 ## ▶️ Uso rápido
 
 ```python
-from src.algorithms.fcdga import FCDGA
+from src.algorithms.fcdga import fcdga
 from src.benchmarks.benchmarks import rastrigin
 
-algo = FCDGA(
+melhor_fitness = fcdga(
     func=rastrigin,
     dim=30,
     pop_size=50,
-    territorios=5,
-    max_iter=500,
+    gens=500,
+    n_terr=5,
 )
-
-melhor_solucao, melhor_fitness = algo.run()
 print(f"Melhor fitness encontrado: {melhor_fitness}")
+```
+
+Para acompanhar a curva de convergência real (monotonicamente decrescente, não o
+melhor-por-geração bruto):
+
+```python
+melhor_fitness, historico = fcdga(rastrigin, dim=30, gens=500, return_history=True)
 ```
 
 Ou rode a bateria completa de benchmarks (compara FCDGA, AG clássico e DE):
@@ -94,13 +99,19 @@ AG-caranguejos/
 │   └── fcdga.latex
 ├── src/
 │   ├── algorithms/
-│   │   ├── fcdga.py           # Algoritmo proposto
+│   │   ├── fcdga.py           # Algoritmo proposto (com hook F_schedule p/ meta-evolução)
 │   │   ├── ga.py               # AG clássico (baseline)
 │   │   └── de.py                # DE/rand/1/bin (baseline)
 │   ├── benchmarks/
 │   │   └── benchmarks.py     # Funções: Sphere, Rastrigin, Ackley, Rosenbrock, Griewank
 │   ├── caranguejos_violonistas.py
 │   └── logs/                    # Saídas de execução (não versionado)
+├── meta/                       # Meta-evolução: LLM local evolui os hiperparâmetros do FCDGA
+│   ├── sandbox.py               # Validação (AST) + execução isolada de código gerado
+│   ├── llm_ops.py                # Crossover/mutação via Ollama
+│   └── meta_loop.py               # Orquestração do ciclo de meta-evolução
+├── docs/figures/               # Gráficos curados para este README
+├── ROADMAP.md                  # Plano de fases (algoritmo + aplicação real)
 └── README.md
 ```
 
@@ -118,14 +129,49 @@ AG-caranguejos/
 
 ---
 
+## 🤖 Meta-evolução: um LLM local evolui o próprio algoritmo
+
+Além de otimizar funções matemáticas, o FCDGA pode evoluir **seus próprios
+hiperparâmetros** — em vez de valores fixos de `F` (fator diferencial), um LLM local
+(via [Ollama](https://ollama.com)) gera e recombina *funções de adaptação* de `F`,
+usando a mesma lógica de seleção sexual do algoritmo, agora aplicada a variantes de
+código:
+
+```python
+from meta.meta_loop import rodar_meta_evolucao
+
+melhor = rodar_meta_evolucao(tamanho_pop=6, geracoes=5)
+print(melhor.codigo)  # a função de adaptação de F que melhor performou nos benchmarks
+```
+
+Todo código gerado passa por validação estática (AST) e execução isolada em
+subprocesso com timeout antes de ser aceito — ver `meta/sandbox.py`. Testado
+localmente com `phi3:3.8b` rodando em container Docker (4GB VRAM).
+
+---
+
+## 🏛️ Aplicação real: LexLearn
+
+Esse mesmo mecanismo está sendo levado para calibrar parâmetros de produção da
+plataforma educacional LexLearn — a começar pelo limiar de similaridade do cache de
+resumos de leis (CF, CC, CPC, ECA). Arquitetura de integração, alterações de schema e
+o motivo de usar Optuna em vez do FCDGA nesse caso específico estão documentados em
+`optimizer_worker_integration.md` (repositório do LexLearn).
+
+---
+
 ## 🛣️ Roadmap
 
-- [ ] Fator diferencial `F` adaptativo (estilo jDE/SHADE)
-- [ ] Parâmetros `α`/`β` da seleção sexual adaptativos ao longo das gerações
-- [ ] Custo do sinal `λ·C(s(x))` com decaimento dinâmico
+Plano completo, com fases concluídas e planejadas (algoritmo + aplicação real), em
+[`ROADMAP.md`](ROADMAP.md). Resumo:
+
+- [x] Correção de bugs de elitismo e fitness efetivo (Fase 0)
+- [x] Meta-evolução de hiperparâmetros via LLM local (Fase 1)
+- [ ] MVP de otimização aplicada ao LexLearn — threshold de similaridade (Fase 2)
+- [ ] Evolução de prompts de resumo e quiz (Fase 3)
+- [ ] Chunking hierárquico e pesos de ranking do RAG (Fase 4)
 - [ ] Testes estatísticos formais (Wilcoxon/Friedman) entre FCDGA, AG e DE
 - [ ] Publicação dos resultados finais no paper
-- [ ] Empacotar como biblioteca (`pip install fcdga`)
 
 Acompanhe o progresso no [GitHub Project](../../projects) do repositório.
 
