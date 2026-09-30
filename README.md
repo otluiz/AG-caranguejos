@@ -19,7 +19,7 @@ O **FCDGA** traduz esse mecanismo para otimização contínua:
 - 🎲 **Seleção sexual probabilística**: chance de vencer um duelo via função sigmoide, combinando aptidão e sinal
 - 🧬 **Reprodução diferencial**: a fêmea escolhida atua como vetor-base da recombinação (estilo DE), cruzada com machos vencedores de cada território
 
-O resultado é um híbrido AG + DE que busca aumentar a diversidade populacional e evitar convergência prematura em funções multimodais, sem abrir mão da capacidade de intensificação da Evolução Diferencial clássica.
+O resultado é um híbrido AG + DE que busca aumentar a diversidade populacional e evitar convergência prematura em funções multimodais. Os resultados atuais mostram que isso funciona no Rastrigin, mas que a intensificação ainda fica abaixo da DE clássica nas demais funções (ver Resultados).
 
 📄 O paper completo com a fundamentação teórica e metodologia está em [`Latex/fcdga.latex`](Latex/fcdga.latex).
 
@@ -27,24 +27,57 @@ O resultado é um híbrido AG + DE que busca aumentar a diversidade populacional
 
 ## 📊 Resultados
 
-Em funções **multimodais**, o FCDGA supera consistentemente AG clássico e DE/rand/1/bin em qualidade de solução — pagando isso com um custo computacional maior por época. É exatamente o trade-off exploração-vs-custo previsto na fundamentação teórica do paper.
+Resultados do experimento com **orçamento igual de avaliações** para todos os
+algoritmos: 60.000 avaliações da função objetivo por execução, D = 30, 30 execuções
+por configuração com sementes fixas, Mann-Whitney com correção de Holm e Friedman.
+Protocolo completo, código, dados brutos e figuras estão em
+[`experimentos/orcamento_igual/`](experimentos/orcamento_igual/).
 
 <p align="center">
-  <img src="docs/figures/rastrigin_boxplot.png" width="420" alt="Boxplot - Rastrigin">
-  <img src="docs/figures/ackley_boxplot.png" width="420" alt="Boxplot - Ackley">
+  <img src="experimentos/orcamento_igual/figuras/fig_boxplots.png" width="720" alt="Boxplots das cinco funções">
 </p>
 
-| Função     | FCDGA (melhor valor) | AG clássico | DE/rand/1/bin | Tempo/época FCDGA | Tempo/época DE | Overhead FCDGA |
-|------------|:---------------------:|:-----------:|:--------------:|:-------------------:|:-----------------:|:-----------------:|
-| Rastrigin  | **≈ 340**              | ≈ 428        | ≈ 434            | ≈ 0,0105 s           | ≈ 0,0042 s          | ~2,5×               |
-| Ackley     | **≈ 7,89**             | ≈ 8,48        | ≈ 9,30            | ≈ 0,0120 s           | ≈ 0,0050 s          | ~2,4×               |
-| Sphere     | —                       | —            | —                 | —                     | —                    | —                   |
-| Rosenbrock | —                       | —            | —                 | —                     | —                    | —                   |
-| Griewank   | —                       | —            | —                 | —                     | —                    | —                   |
+Mediana do melhor valor encontrado (menor é melhor):
 
-> Menor é melhor para todas as colunas de valor. Preencha as linhas de Sphere, Rosenbrock e Griewank com seus próprios logs — nessas funções unimodais/menos multimodais, é esperado que DE clássico seja competitivo ou superior, o que é um resultado igualmente honesto e relevante para reportar.
+| Função     | AG       | DE/rand/1/bin | FCDGA (versão original) | **FCDGA (atual)** |
+|------------|---------:|--------------:|------------------------:|------------------:|
+| Sphere     | 2,58e-04 | **3,16e-10**  | 9,31                    | 2,00              |
+| Rastrigin  | 59,73    | 179,11        | 103,38                  | **49,77**         |
+| Ackley     | 3,25     | **1,60e-05**  | 3,38                    | 3,37              |
+| Rosenbrock | 30,06    | **21,52**     | 4,55e+03                | 191,69            |
+| Griewank   | 1,53e-05 | **2,68e-11**  | 0,17                    | 0,28              |
 
-Curvas de convergência e gráficos completos de tempo por época em `src/logs/`.
+O que os dados mostram:
+
+- **A DE clássica é a melhor em 4 de 5 funções.** Em Sphere, Ackley e Griewank ela
+  chega a valores praticamente nulos.
+- **O FCDGA atual é o melhor em Rastrigin**, com diferença significativa em relação
+  ao AG (p = 0,013) e à DE (p < 0,001). No Rastrigin o AG converge prematuramente
+  (estaciona perto de 60 com cerca de 6 mil avaliações), e o FCDGA continua
+  melhorando até cerca de 40 mil.
+- **A correção do sinal da seleção sexual** (ver abaixo) melhorou o algoritmo em
+  Sphere, Rastrigin e Rosenbrock (p < 0,001), sem diferença em Ackley e com leve
+  piora em Griewank (p = 0,031).
+- Nas funções unimodais o FCDGA é o mais lento. Uma hipótese, ainda não testada: o
+  traço sexual `std(x)` dá bônus a coordenadas espalhadas, mas o ótimo dessas funções
+  está na origem, onde `std(x) = 0`.
+
+> **Nota sobre resultados anteriores.** Versões anteriores deste README diziam que o
+> FCDGA superava consistentemente o AG e a DE em Rastrigin e Ackley. Aqueles números
+> vinham de uma comparação com o mesmo número de **gerações**, mas por geração o
+> FCDGA faz cerca de 140 avaliações, a DE 100 e o AG 50. Com o mesmo número de
+> **avaliações**, a vantagem só se mantém no Rastrigin, e apenas com a seleção
+> corrigida.
+
+### Correção do sinal na seleção sexual
+
+Como o problema é de minimização, o macho com menor aptidão efetiva deve ter mais
+chance de vencer o duelo. A versão original usava `alpha * (fi_eff - fj_eff)`, que dá
+probabilidade menor que 0,5 ao melhor indivíduo: o duelo favorecia o pior, e o filho
+era deslocado para longe da melhor solução. O `fcdga()` atual usa
+`alpha * (fj_eff - fi_eff)`. O comportamento antigo continua disponível com
+`fcdga(..., favorece_pior=True)`, só para reproduzir os resultados da versão
+original.
 
 ---
 
@@ -99,7 +132,7 @@ AG-caranguejos/
 │   └── fcdga.latex
 ├── src/
 │   ├── algorithms/
-│   │   ├── fcdga.py           # Algoritmo proposto (com hook F_schedule p/ meta-evolução)
+│   │   ├── fcdga.py           # Algoritmo proposto (hook F_schedule p/ meta-evolução; favorece_pior=True reproduz a versão original)
 │   │   ├── ga.py               # AG clássico (baseline)
 │   │   └── de.py                # DE/rand/1/bin (baseline)
 │   ├── benchmarks/
@@ -110,7 +143,9 @@ AG-caranguejos/
 │   ├── sandbox.py               # Validação (AST) + execução isolada de código gerado
 │   ├── llm_ops.py                # Crossover/mutação via Ollama
 │   └── meta_loop.py               # Orquestração do ciclo de meta-evolução
-├── docs/figures/               # Gráficos curados para este README
+├── experimentos/
+│   └── orcamento_igual/        # Experimento com orçamento igual (código, dados, figuras)
+├── docs/figures/               # Gráficos da versão anterior (comparação por gerações)
 ├── ROADMAP.md                  # Plano de fases (algoritmo + aplicação real)
 └── README.md
 ```
@@ -170,7 +205,8 @@ Plano completo, com fases concluídas e planejadas (algoritmo + aplicação real
 - [ ] MVP de otimização aplicada ao LexLearn — threshold de similaridade (Fase 2)
 - [ ] Evolução de prompts de resumo e quiz (Fase 3)
 - [ ] Chunking hierárquico e pesos de ranking do RAG (Fase 4)
-- [ ] Testes estatísticos formais (Wilcoxon/Friedman) entre FCDGA, AG e DE
+- [x] Testes estatísticos formais (Mann-Whitney/Friedman) entre FCDGA, AG e DE, com orçamento igual de avaliações
+- [x] Correção do sinal da seleção sexual (minimização)
 - [ ] Publicação dos resultados finais no paper
 
 Acompanhe o progresso no [GitHub Project](../../projects) do repositório.

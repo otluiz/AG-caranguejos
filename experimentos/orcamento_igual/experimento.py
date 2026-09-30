@@ -1,7 +1,8 @@
 """Experimento FCDGA x AG x DE com orçamento igual de avaliações da função objetivo.
 
 Usa o código do repositório otluiz/AG-caranguejos (commit 964cb72) sem alterá-lo:
-  - fcdga()              : versão do repositório (seleção sexual como está)
+  - fcdga(favorece_pior=True) : versão ORIGINAL do repositório (antes da correção
+                           do sinal em src/algorithms/fcdga.py)
   - fcdga_sinal()        : mesma coisa com o sinal da aptidão invertido na seleção
                            (vence com maior prob. o indivíduo de MENOR f_eff)
   - genetic_algorithm()  : AG do repositório
@@ -102,7 +103,7 @@ def de_padrao(func, dim=30, pop_size=50, gens=10**9, F=0.6, CR=0.9):
 ALGS = {
     "AG": lambda f: genetic_algorithm(f, dim=DIM, gens=10**9),
     "DE": lambda f: de_padrao(f, dim=DIM),
-    "FCDGA": lambda f: fcdga(f, dim=DIM, gens=10**9),
+    "FCDGA": lambda f: fcdga(f, dim=DIM, gens=10**9, favorece_pior=True),
     "FCDGA-s": lambda f: fcdga_sinal(f, dim=DIM),
 }
 

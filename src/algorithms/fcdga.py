@@ -4,7 +4,7 @@ import numpy as np
 def fcdga(func, dim=30, pop_size=50, gens=1000,
           F=0.6, alpha=1, beta=1, lamb=0.1, n_terr=5,
           elite_frac=0.1, F_schedule=None,
-          return_history=False):
+          return_history=False, favorece_pior=False):
     """
     Versão corrigida do FCDGA original.
 
@@ -17,6 +17,13 @@ def fcdga(func, dim=30, pop_size=50, gens=1000,
          inteira ser descartada e substituída por filhos. Isso evita a
          regressão de "melhor valor" entre gerações observada nos gráficos
          de convergência (picos abruptos).
+      3. Sentido da seleção sexual: como o problema é de MINIMIZAÇÃO, o macho
+         de menor aptidão efetiva deve ter maior chance de vencer o duelo. A
+         versão anterior usava alpha*(fi_eff - fj_eff), que dá p < 0.5 ao
+         MELHOR indivíduo -- o duelo favorecia o pior e o filho era deslocado
+         para longe da melhor solução. Agora usa alpha*(fj_eff - fi_eff).
+         Com orçamento igual de avaliações, a correção melhorou o algoritmo
+         em Sphere, Rastrigin e Rosenbrock (ver experimentos/orcamento_igual).
 
     Extensão para meta-evolução:
       - `F_schedule`: callable opcional (geracao, max_geracoes) -> float.
@@ -31,6 +38,10 @@ def fcdga(func, dim=30, pop_size=50, gens=1000,
         onde historico[g] = melhor fitness já encontrado ATÉ a geração g
         (curva monotonicamente não-crescente, diferente do gráfico atual
         que plota o melhor DA geração, causando a aparência serrilhada).
+    favorece_pior : bool
+        Se True, reproduz o sentido ANTERIOR da seleção sexual (duelo favorece
+        o indivíduo pior). Mantido só para reproduzir os resultados publicados
+        da versão original (coluna FCDGA em experimentos/orcamento_igual).
     """
     pop = np.random.uniform(-5, 5, (pop_size, dim))
 
@@ -84,7 +95,8 @@ def fcdga(func, dim=30, pop_size=50, gens=1000,
                 fi_eff = func(xi) - lamb * (sexual_trait(xi) ** 2)
                 fj_eff = func(xj) - lamb * (sexual_trait(xj) ** 2)
                 si, sj = sexual_trait(xi), sexual_trait(xj)
-                diff = alpha * (fi_eff - fj_eff) + beta * (si - sj)
+                termo_aptidao = (fi_eff - fj_eff) if favorece_pior else (fj_eff - fi_eff)
+                diff = alpha * termo_aptidao + beta * (si - sj)
                 diff = np.clip(diff, -500, 500)  # evita overflow no exp para diffs extremos
                 p = 1 / (1 + np.exp(-diff))
 
