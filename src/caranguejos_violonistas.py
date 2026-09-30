@@ -70,8 +70,9 @@ def fcdga(func, dim=30, pop_size=50, gens=1000, F=0.6, alpha=1, beta=1, lamb=0.1
                 fi, fj = func(xi), func(xj)
                 si, sj = sexual_trait(xi), sexual_trait(xj)
 
-                # Probabilidade do macho i "vencer" j
-                diff = alpha * (fi - fj) + beta * (si - sj)
+                # Probabilidade do macho i "vencer" j. Minimização: o de MENOR
+                # aptidão deve ter mais chance, daí (fj - fi) e não (fi - fj).
+                diff = alpha * (fj - fi) + beta * (si - sj)
                 p = 1 / (1 + np.exp(-diff))  # sigmoide
 
                 if np.random.rand() < p:

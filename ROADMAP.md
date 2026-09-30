@@ -11,8 +11,14 @@ si (pesquisa) e sua aplicação real no [LexLearn-v3](https://github.com/otluiz)
 - [x] Correção de bug: aptidão efetiva (`f_eff`) calculada mas não usada na seleção
 - [x] Correção de bug: ausência de elitismo real (população inteira substituída por
       geração, causando regressão do melhor valor entre gerações)
-- [x] Validação empírica: FCDGA supera GA clássico e DE/rand/1/bin em Rastrigin e
-      Ackley (funções multimodais), com overhead de tempo ~2,4-2,5× — ver `README.md`
+- [x] ~~Validação empírica: FCDGA supera GA clássico e DE/rand/1/bin em Rastrigin e
+      Ackley~~ — resultado de comparação por GERAÇÕES, revisto abaixo
+- [x] Correção de bug: sinal da seleção sexual invertido para minimização (o duelo
+      favorecia o pior); versão antiga preservada em `fcdga(..., favorece_pior=True)`
+- [x] Experimento com orçamento igual de avaliações (60 mil, D = 30, 30 execuções,
+      Mann-Whitney/Holm e Friedman) em `experimentos/orcamento_igual/`: a DE é melhor
+      em 4 de 5 funções; o FCDGA corrigido é melhor no Rastrigin (p = 0,013 contra o
+      AG; p < 0,001 contra a DE)
 
 ## ✅ Fase 1 — Meta-evolução de hiperparâmetros (concluída — MVP local)
 
@@ -83,6 +89,7 @@ positivos), medido por tipo de documento.
   descartado por risco/benefício desfavorável; ver discussão na Fase 1. O caminho
   recomendado para código de produção continua sendo Claude Code local com testes
   automatizados como grade de aceite.
-- Publicação do FCDGA como paper formal — depende da Fase 0 estar
-  estatisticamente validada (testes de Wilcoxon/Friedman entre algoritmos,
-  benchmarks completos incluindo Sphere/Rosenbrock/Griewank).
+- Publicação do FCDGA como paper formal em periódico de maior impacto — os testes
+  estatísticos e as cinco funções já foram feitos (ver `experimentos/orcamento_igual/`);
+  faltam funções deslocadas/rotacionadas (CEC), várias dimensões, ajuste de
+  parâmetros e revisão do traço sexual `std(x)`.
